@@ -86,6 +86,7 @@ Medido el 2026-11-27 en la máquina de desarrollo (i9-12900H, .NET 10), mejor de
 - **Elegida: NSec.Cryptography**, que envuelve libsodium. Trae binario nativo para Windows x64, x86 y arm64, Linux (incluido musl y ARM) y Mac; 452 KB en Windows.
 - **Descartado: BouncyCastle**, 2.7 veces más lenta y 5 MB de criptografía que no se usa. **Descartado: Konscious**, sin release desde 2024 y 21 incidencias abiertas. **Descartado: Geralt**, mismo libsodium con comunidad más chica. **Descartado: Isopoh**, cuya licencia no es de software.
 - **Descartado: PBKDF2 de la biblioteca estándar.** No pide librería de terceros, pero resiste peor los ataques con tarjetas gráficas.
+- **El hash se guarda en el formato estándar PHC** (`$argon2id$v=19$m=19456,t=2,p=1$<sal>$<hash>`), con sal aleatoria de 16 bytes por cuenta y hash de 32 bytes. **Descartado: un formato propio.**
 - **Parámetros: 19 MiB de memoria, 2 pasadas, 1 hilo** (mínimo de OWASP). Se guardan con cada hash, así que se pueden subir después. **Descartado: 46 MiB con 1 pasada** y **64 MiB con 3 pasadas**, por el peso en equipos modestos.
 - **La librería se referencia en el núcleo** (`src/Core`), fuera de `Osme.Core.Contracts`: los módulos no la ven. **Descartado: una interfaz en el núcleo con la implementación en el Host.**
 
@@ -98,6 +99,8 @@ El servidor entrega un token aleatorio de **32 bytes** en una galleta `HttpOnly;
 - **Descartado: JWT firmado.** No se puede revocar al instante, y quien fue desactivado seguiría entrando hasta que el token venza.
 - **Duración: 12 horas sin uso y tope de 7 días.** **Descartado: 8 horas con tope de un día** y **30 días sin uso**.
 - **Varias sesiones a la vez: configurable por instalación, de fábrica permitido.** Es un ajuste único de la instalación, que vale para todos los usuarios en todos los módulos y cambia quien tenga la vista Ajustes de acceso. Se guarda en la tabla `core.setting` y aplica al instante. **Descartado: columna en la empresa** y **archivo de configuración.** Cuando no se permite, entrar en un equipo cierra las demás sesiones de la cuenta. **Descartado: fijo en varias, fijo en una, por rol y por cuenta.**
+- **El último uso se escribe como mucho una vez por minuto.** **Descartado: en cada petición.**
+- **Las sesiones vencidas se borran solas:** al intentar usarlas, y las de la cuenta en cada entrada correcta. **Descartado: dejarlas hasta que exista una tarea de limpieza.**
 - Salir cierra solo la sesión de ese equipo.
 - **Falsificación de peticiones entre sitios: `SameSite=Strict`, cuerpo JSON obligatorio en toda escritura y encabezado `Origin` igual al servidor.** **Descartado: además un token anti-falsificación por sesión.**
 
@@ -178,7 +181,11 @@ Ver un documento se concede con alcance a todos los registros o solo a los que c
 
 - **Regla clásica:** de 8 a 128 caracteres con mayúscula, minúscula, número y símbolo. Se recomendaba longitud mínima sin composición (pauta de NIST); DataDave-Dev eligió la clásica.
 - **Tras 5 fallos seguidos, la cuenta espera 15 minutos; se desbloquea sola, o antes quien tenga la vista Usuarios.** **Descartado: solo sola** y **solo por un administrador**, que dejaría fuera a cualquiera con cinco intentos ajenos.
-- Usuario inexistente, contraseña equivocada, cuenta desactivada y cuenta bloqueada responden igual.
+- **Las clases de carácter siguen Unicode:** Ñ y Á son mayúsculas; símbolo es todo lo que no es letra ni número, incluido el espacio. La contraseña se guarda tal cual, sin recortar. **Descartado: solo ASCII.**
+- **El rechazo trae todas las reglas que fallan**, con los códigos `too_short`, `too_long`, `missing_uppercase`, `missing_lowercase`, `missing_digit` y `missing_symbol`. **Descartado: solo la primera.**
+- **Pasada la espera, la cuenta de fallos empieza de cero;** los intentos hechos durante la espera se rechazan sin contar ni alargarla. **Descartado: que cada fallo vuelva a bloquear** y **espera creciente.**
+- **Al entrar, el usuario escrito se pasa a minúsculas y se le quitan los espacios de los lados.** **Descartado: solo minúsculas.**
+- Usuario inexistente, contraseña equivocada, cuenta desactivada y cuenta bloqueada responden igual, **y tardan lo mismo: se calcula un hash de relleno.** **Descartado: igualar solo la respuesta.**
 - **Cambiar la contraseña propia pide la actual** y cierra las sesiones de esa cuenta en otros equipos. **Descartado: no pedirla.**
 
 ### 10. Cuentas: quién puede qué
