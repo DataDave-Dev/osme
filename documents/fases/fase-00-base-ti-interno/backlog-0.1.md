@@ -32,7 +32,7 @@ Regla completa en [proceso/openspec.md](../../proceso/openspec.md). Cada change 
 
 | Clave | Change | Qué funciona al terminar | Estado |
 |---|---|---|---|
-| 0-1-1 | `c0-1-1-un-ticket-de-punta-a-punta` | El servidor carga núcleo y TI interno; se levanta un ticket desde el navegador y queda guardado | Listo para sprint: proposal, design, specs y tasks |
+| 0-1-1 | `c0-1-1-un-ticket-de-punta-a-punta` | El servidor carga núcleo y TI interno; se levanta un ticket desde el navegador y queda guardado | Terminado y archivado el 2026-11-27 |
 | 0-2-1 | `c0-2-1-entrar-al-sistema` | Primer arranque crea empresa y administrador; inicio de sesión; permisos por módulo; se abre a la red local | Propuesta con historias |
 | 0-3-1 | `c0-3-1-el-ticket-se-atiende` | Asignar, cambiar estado, comentar, adjuntar, cerrar; bitácora de cambios | Propuesta con historias |
 | 0-4-1 | `c0-4-1-dos-idiomas-y-celular` | Todo en español e inglés; interfaz adaptable a celular | Propuesta con historias |

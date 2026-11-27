@@ -12,6 +12,7 @@ Estado al 2026-11-27, con el change corriendo. Se separa lo **verificado ejecut�
 - Decisión 4: cada paquete en su propio contexto de carga. **El supuesto se cumplió:** la reflexión sobre atributos funciona entre contextos, a condición de que el paquete tome del Host los ensamblados que el Host ya tiene (el núcleo sobre todo) y no una copia propia.
 - Decisión 5: el servidor escucha en `127.0.0.1` y `[::1]`; una petición a la IP de red de la misma máquina no conecta.
 - Decisión 6: mismas rutas y misma forma de respuesta para todo documento.
+- El flujo de integración continua pasó en verde en GitHub en la primera subida.
 - Decisión 8: la prueba de frontera pasa con ItDesk y falla, nombrando paquete y tipo, con un paquete de prueba que usa código no publicado del núcleo.
 
 **Cambió respecto a lo escrito:**
@@ -26,7 +27,6 @@ Estado al 2026-11-27, con el change corriendo. Se separa lo **verificado ejecut�
 
 **Sigue siendo supuesto:**
 
-- Que el flujo de integración continua pasa en GitHub: está escrito y no se ha subido (tarea 7.3).
 - Que el idioma de origen de los textos sea el español. Etiquetas y mensajes están en español en un solo lugar por lado (`Ticket.cs`, `src/web/src/messages.ts`); el change `c0-4-1` decide el mecanismo de traducción.
 - Que la restricción `CHECK` de un campo de opción baste: se escribe una vez, al crear la columna. Cambiar las opciones de un campo ya creado necesitará migraciones versionadas.
 
