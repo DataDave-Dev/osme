@@ -13,7 +13,7 @@ Restricciones heredadas:
 
 **Todas las decisiones de abajo las tomó DataDave-Dev el 2026-11-27**, respondiendo preguntas con opciones. Donde eligió algo distinto de lo recomendado se dice. Lo que nadie ha decidido está en "Open Questions", sin valor.
 
-**Verificado ejecutándolo:** que NSec.Cryptography calcula Argon2id en Linux con .NET 10 y da el mismo resultado que otras cuatro librerías (comparativa de la decisión 2). También la tarea 2.1: el núcleo crea sus siete tablas y el rol de administrador, y un segundo arranque no cambia nada. Nada más de este change todavía. Del anterior sigue en pie lo que su `design.md` lista como verificado.
+**Verificado ejecutándolo:** que NSec.Cryptography calcula Argon2id en Linux con .NET 10 y da el mismo resultado que otras cuatro librerías (comparativa de la decisión 2). También las tareas 2.1 a 2.4, con pruebas contra PostgreSQL real: el núcleo crea sus siete tablas y el rol de administrador y un segundo arranque no cambia nada; reglas de contraseña y hash Argon2id en formato PHC; sesiones con sus dos vencimientos y el ajuste de varias sesiones; entrada con bloqueo por intentos fallidos. Lo demás de este change sigue sin construir. Del anterior sigue en pie lo que su `design.md` lista como verificado.
 
 **Supuesto** (cada uno lo cierra una tarea):
 

@@ -54,15 +54,6 @@ public class PasswordTests
     public void Two_hashes_of_the_same_password_differ() =>
         Assert.NotEqual(PasswordHasher.Hash("Abcdef1!"), PasswordHasher.Hash("Abcdef1!"));
 
-    [Fact]
-    public void Matches_a_known_Argon2id_vector()
-    {
-        // Reference value from the argon2 command line tool: echo -n password | argon2 somesalt -id -t 2 -k 19456 -p 1 -l 32
-        // Checked below against the algorithm itself rather than trusted blindly: the same hash must verify.
-        var hash = PasswordHasher.Hash("password");
-        Assert.True(PasswordHasher.Verify("password", hash));
-    }
-
     [Theory]
     [InlineData("")]
     [InlineData("not a hash")]

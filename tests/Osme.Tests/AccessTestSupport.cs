@@ -19,7 +19,7 @@ public sealed class AccessDatabase : IAsyncDisposable
     public const string Password = "Abcdef1!";
 
     public TestDatabase Database { get; private init; } = null!;
-    public TestClock Clock { get; } = new();
+    public TestClock Clock { get; private init; } = null!;
     public Sessions Sessions { get; private init; } = null!;
     public SignIn SignIn { get; private init; } = null!;
 
