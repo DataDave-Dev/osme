@@ -1,0 +1,89 @@
+schema: spec-driven
+
+context: |
+  OSME (Open Source Modular Enterprise): ERP de código abierto, completo y
+  modular. Cada módulo se instala por separado y el sistema se adapta a la
+  empresa, no al revés.
+
+  ## documents/ manda
+
+  El diseño aprobado vive en `documents/` y es la fuente de verdad. Orden de
+  lectura:
+
+    1. documents/README.md                          índice
+    2. documents/arquitectura/arquitectura.md       cómo está armado el sistema
+    3. documents/decisiones/                         por qué, una decisión por archivo
+    4. documents/hoja-de-ruta/hoja-de-ruta.md        orden de las fases
+    5. documents/fases/<fase>/diseno.md              alcance de la fase en curso
+    6. documents/fases/<fase>/backlog-<entrega>.md   orden de los changes
+
+  Un change no reabre una decisión de `documents/decisiones/`. Si hace falta
+  cambiarla, se escribe una decisión nueva que la reemplaza.
+
+  ## Arquitectura en una pantalla
+
+  Núcleo chico + paquetes (módulo, localización, extensión), en un solo
+  proceso. Cada documento se declara una vez en el servidor; de la declaración
+  salen tabla, validación, API, formulario, lista y permisos. La interfaz no
+  conoce los documentos: los dibuja a partir de la descripción que publica el
+  servidor.
+
+  Cada paquete tiene su propio esquema de Postgres. Ningún paquete toca tablas
+  ni código interno de otro: solo servicios públicos y eventos.
+
+  Una instalación = una organización = una base de datos, con varias empresas
+  dentro. El proyecto no opera nube.
+
+  ## Stack
+
+  Servidor .NET (C#), ejecutable autocontenido. PostgreSQL. Interfaz React +
+  TypeScript + Vite, servida por el mismo servidor, en navegador y adaptable a
+  celular. Gestor de paquetes de la interfaz: solo `pnpm`.
+
+    src/Core/            núcleo
+    src/Modules/         módulos oficiales
+    src/Localizations/   paquetes de país
+    src/Host/            servidor que carga núcleo + paquetes
+    src/web/             interfaz
+
+  ## Idioma
+
+  Código en inglés: clases, tablas, campos, rutas. La prosa de estos artefactos
+  va en español por ahora y se traduce al inglés cuando el repositorio se abra
+  a la comunidad. `SHALL`, `WHEN`, `THEN` y los encabezados de delta van en
+  inglés siempre. Los textos que ve el usuario nunca se escriben fijos en el
+  código: pasan por traducción.
+
+  ## Forma de trabajo
+
+  Scrum, sprints de 2 semanas, una persona a tiempo parcial. Un change es una
+  rebanada vertical: algo que se puede correr y ver de punta a punta, del
+  tamaño aproximado de un sprint. Requirement = historia de usuario; Scenario
+  = criterio de aceptación.
+
+  Cada change lleva una clave FASE-SPRINT-CHANGE (ejemplo: 0-1-1). La carpeta
+  antepone una `c` (`c0-1-1-nombre`) porque OpenSpec exige que el nombre
+  empiece con letra. El sprint es aquel en que el change empieza; las claves
+  no se renumeran.
+
+  ## Git
+
+  Mensajes de commit en formato `<tipo>: <descripción>` (feat, fix, refactor,
+  docs, test, chore, perf, ci). Sin firmas ni atribuciones de herramientas.
+
+rules:
+  proposal:
+    - Cita el documento de documents/ que respalda cada afirmación; no repitas su contenido.
+    - Declara qué queda fuera de alcance y a qué change o entrega se va, no solo qué entra.
+    - Toda pregunta abierta se declara como abierta, con su valor asumido mientras tanto.
+  specs:
+    - Los escenarios llevan exactamente cuatro almohadillas.
+    - Prosa en español; SHALL, WHEN, THEN y los encabezados de delta en inglés.
+    - Cada requisito describe comportamiento observable, no archivos ni carpetas.
+    - Todo requisito que exponga datos lleva un escenario negativo - qué NO se devuelve y a quién.
+  design:
+    - Cada decisión nombra la alternativa descartada y por qué.
+    - Separa lo verificado ejecutándolo de lo supuesto, y dilo con esas palabras.
+  tasks:
+    - Cada tarea se cierra con un comando o una comprobación visible que la demuestra.
+    - Ordenadas por dependencia real, no por comodidad.

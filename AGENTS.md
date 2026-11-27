@@ -1,0 +1,49 @@
+# OSME — instrucciones para agentes
+
+OSME (Open Source Modular Enterprise) es un ERP de código abierto, completo y modular. Estas instrucciones valen para cualquier agente de IA que trabaje en este repositorio.
+
+## Antes de tocar nada
+
+Lee, en este orden:
+
+1. `documents/README.md` — índice.
+2. `documents/arquitectura/arquitectura.md` — cómo está armado el sistema.
+3. `documents/decisiones/` — por qué se eligió cada cosa.
+4. `documents/proceso/openspec.md` — cómo se nombran y llevan los changes.
+5. El change en curso, en `openspec/changes/`.
+
+`documents/` es la fuente de verdad. Un change no reabre una decisión de `documents/decisiones/`; si hay que cambiarla, se escribe una decisión nueva que la reemplaza.
+
+## Clave y prefijo de los changes de OpenSpec (obligatorio)
+
+Todo change lleva una clave **FASE-SPRINT-CHANGE** y su carpeta empieza con la letra `c` seguida de esa clave:
+
+```
+openspec/changes/c<FASE>-<SPRINT>-<CHANGE>-<nombre-en-kebab-case>/
+openspec/changes/c0-1-1-un-ticket-de-punta-a-punta/
+```
+
+- **Nunca** crees un change sin ese prefijo. Créalo ya con el nombre completo: `openspec new change c0-6-1-nombre`.
+- La `c` es obligatoria: OpenSpec rechaza nombres que empiezan con número.
+- La clave se cita sin la `c` (`0-1-1`) y va en la primera línea de `proposal.md`: `> **Clave 0-1-1** · fase 0 · sprint 1 · change 1`.
+- **No renumeres ni reutilices claves**, aunque el change se alargue o se cancele.
+- Antes de asignar una clave, comprueba que no exista en `openspec/changes/` ni en `openspec/changes/archive/`.
+- Si no sabes qué fase o sprint corresponde, pregunta; no inventes la clave.
+
+Detalle completo: `documents/proceso/openspec.md`.
+
+## Reglas del proyecto
+
+- **Paquetes aparte.** Ningún módulo usa tablas ni código interno de otro paquete: solo servicios públicos y eventos. Cada paquete tiene su propio esquema de Postgres.
+- **Documentos declarados.** Un documento se declara una vez en el servidor. No escribas tablas, rutas ni formularios a mano para algo que el motor de documentos ya genera.
+- **Nada de un país en el núcleo** ni en módulos genéricos. Lo fiscal va en paquetes de localización.
+- **Idioma.** Código en inglés. Specs y documentación en español por ahora; `SHALL`, `WHEN`, `THEN` y encabezados de delta en inglés. Ningún texto visible al usuario se escribe fijo en el código.
+- **Stack.** Servidor .NET (C#), PostgreSQL, interfaz React + TypeScript + Vite. En la interfaz, solo `pnpm`.
+- **Pruebas primero** y contra Postgres real para todo lo que toque la base.
+- **Seguridad.** Sin secretos en el código. SQL siempre con parámetros. Todo lo que entra por la API se valida.
+
+## Git
+
+- Mensajes de commit: `<tipo>: <descripción>` (feat, fix, refactor, docs, test, chore, perf, ci).
+- **Sin firmas ni atribuciones de herramientas de IA** en commits ni en pull requests. No agregues líneas `Co-Authored-By` de asistentes.
+- No hagas commit ni push si no se te pide.
