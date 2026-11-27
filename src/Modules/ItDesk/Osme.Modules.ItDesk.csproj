@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Osme.Modules.ItDesk</RootNamespace>
+    <PackageDeployDir>$(RepoRoot)artifacts/packages/$(AssemblyName)/</PackageDeployDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Core/Osme.Core.csproj" Private="false" />
+  </ItemGroup>
+  <Import Project="$(RepoRoot)build/Package.targets" />
+</Project>

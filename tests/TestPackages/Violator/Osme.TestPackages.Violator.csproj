@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageDeployDir>$(RepoRoot)artifacts/test-packages/boundary/$(AssemblyName)/</PackageDeployDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Core/Osme.Core.csproj" Private="false" />
+  </ItemGroup>
+  <Import Project="$(RepoRoot)build/Package.targets" />
+</Project>

@@ -1,0 +1,11 @@
+<Project>
+  <!-- A package is built into its own folder under artifacts/, which is where the Host looks for it.
+       The Host never references a package project. -->
+  <Target Name="DeployPackage" AfterTargets="Build">
+    <ItemGroup>
+      <_PackageFile Include="$(TargetDir)**/*" />
+    </ItemGroup>
+    <RemoveDir Directories="$(PackageDeployDir)" />
+    <Copy SourceFiles="@(_PackageFile)" DestinationFolder="$(PackageDeployDir)%(RecursiveDir)" />
+  </Target>
+</Project>

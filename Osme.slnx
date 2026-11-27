@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="src/Core/Osme.Core.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/Osme.Host.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/ItDesk/">
+    <Project Path="src/Modules/ItDesk/Osme.Modules.ItDesk.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Osme.Tests/Osme.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/" />
+  <Folder Name="/tests/TestPackages/Alpha/">
+    <Project Path="tests/TestPackages/Alpha/Osme.TestPackages.Alpha.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/Beta/">
+    <Project Path="tests/TestPackages/Beta/Osme.TestPackages.Beta.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/Orphan/">
+    <Project Path="tests/TestPackages/Orphan/Osme.TestPackages.Orphan.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/Violator/">
+    <Project Path="tests/TestPackages/Violator/Osme.TestPackages.Violator.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  OSME_DB: Host=localhost;Port=5432;Database=osme;Username=osme;Password=osme_ci
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: osme
+          POSTGRES_PASSWORD: osme_ci
+          POSTGRES_DB: osme
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U osme -d osme"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: src/web/pnpm-lock.yaml
+
+      - name: Build the server (warnings are errors)
+        run: dotnet build
+
+      # Includes the boundary check between packages (BoundaryTests).
+      - name: Server tests, against PostgreSQL
+        run: dotnet test --no-build
+
+      - name: Install the interface
+        run: pnpm --dir src/web install --frozen-lockfile
+
+      - name: Lint, test and build the interface
+        run: |
+          pnpm --dir src/web lint
+          pnpm --dir src/web test
+          pnpm --dir src/web build
+
+      - name: End to end, in a browser
+        run: |
+          pnpm --dir src/web exec playwright install --with-deps chromium
+          pnpm --dir src/web e2e

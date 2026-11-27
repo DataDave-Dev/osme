@@ -8,7 +8,33 @@
 
 ## Estado
 
-En diseño. Todavía no hay código que corra. La arquitectura está aprobada y el backlog de la primera entrega está escrito.
+En construcción. Corre la primera rebanada de punta a punta (change `0-1-1`): el servidor carga el módulo de TI interno y se puede levantar un ticket desde el navegador. Todavía no hay inicio de sesión, así que el servidor solo atiende a la propia máquina.
+
+## Levantar el entorno
+
+Hace falta: SDK de .NET 10 (la versión exacta está en `global.json`), Node 24 con `pnpm`, y Docker.
+
+```sh
+cp .env.example .env                 # valores de desarrollo
+docker compose up -d --wait          # PostgreSQL en localhost:5433
+pnpm --dir src/web install
+pnpm --dir src/web build             # deja la interfaz donde el servidor la sirve
+dotnet build                         # compila todo y deja los paquetes en artifacts/packages
+set -a; . ./.env; set +a             # exporta OSME_DB
+dotnet run --project src/Host        # http://localhost:5080
+```
+
+Para trabajar en la interfaz con recarga: `pnpm --dir src/web dev` (redirige `/api` al servidor).
+
+## Pruebas
+
+```sh
+dotnet test                          # servidor, contra PostgreSQL real; incluye la frontera entre paquetes
+pnpm --dir src/web test              # componentes de la interfaz
+pnpm --dir src/web e2e               # navegador contra el servidor real
+```
+
+La primera vez, `pnpm --dir src/web exec playwright install chromium` descarga el navegador de las pruebas; para usar uno ya instalado, `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium`.
 
 ## Documentación
 

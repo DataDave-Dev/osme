@@ -2,7 +2,33 @@
 
 Primer código de OSME. No hay nada existente que respetar salvo `documents/`. Lo que aquí se elija sobre cómo se declara un documento y cómo se carga un paquete lo heredan todos los módulos, así que importa más que su tamaño.
 
-Nada de este documento está **verificado ejecutándolo**: todo es **supuesto** hasta que el change corra. Donde una decisión dependa de una comprobación, se dice.
+Estado al 2026-11-27, con el change corriendo. Se separa lo **verificado ejecutándolo** de lo que sigue siendo **supuesto**.
+
+**Verificado ejecutándolo** (pruebas en `tests/Osme.Tests`, `src/web/src` y `src/web/e2e`, más el servidor levantado a mano):
+
+- Decisión 1 y 7: de la declaración salen tabla, API y pantalla. Un campo temporal agregado al ticket apareció en formulario y lista sin tocar `src/web`.
+- Decisión 2: SQL propio sobre Npgsql, con parámetros, contra PostgreSQL 17 real.
+- Decisión 3: la segunda carga con un campo más conserva los registros y deja el campo vacío en los anteriores.
+- Decisión 4: cada paquete en su propio contexto de carga. **El supuesto se cumplió:** la reflexión sobre atributos funciona entre contextos, a condición de que el paquete tome del Host los ensamblados que el Host ya tiene (el núcleo sobre todo) y no una copia propia.
+- Decisión 5: el servidor escucha en `127.0.0.1` y `[::1]`; una petición a la IP de red de la misma máquina no conecta.
+- Decisión 6: mismas rutas y misma forma de respuesta para todo documento.
+- Decisión 8: la prueba de frontera pasa con ItDesk y falla, nombrando paquete y tipo, con un paquete de prueba que usa código no publicado del núcleo.
+
+**Cambió respecto a lo escrito:**
+
+- **Lo publicado por un paquete es su espacio de nombres `<Ensamblado>.Contracts`.** La decisión 8 hablaba de "tipos no públicos"; como el Host necesita usar el motor, esos tipos son públicos para el compilador y lo que la prueba revisa es el espacio de nombres.
+- **Las opciones llevan etiqueta.** La descripción publica cada opción como valor y etiqueta (`low` / "Baja"); sin eso la pantalla mostraría el valor interno.
+- **Los rechazos viajan como código, no como frase** (`required`, `too_long`, `invalid_option`, `unknown_field`, `invalid_type`). La interfaz los redacta, para que ningún texto visible quede fijo en el servidor.
+- **Se agregó `GET /api/meta`** (lista de documentos disponibles), que la decisión 6 no tenía: la interfaz la necesita para saber qué ofrecer sin conocer ningún documento.
+- **Se agregó una pantalla genérica de consulta de un registro**, que `specs/tickets-de-ti` pide ("abrir un ticket para ver todos sus datos") y la decisión 7 no nombraba.
+- **Fecha y hora solo existe como campo del sistema** (`created_at`). Un paquete todavía no puede declarar un campo de ese tipo.
+- **Un paquete omitido se descarga de memoria**, así que su contexto es recolectable.
+
+**Sigue siendo supuesto:**
+
+- Que el flujo de integración continua pasa en GitHub: está escrito y no se ha subido (tarea 7.3).
+- Que el idioma de origen de los textos sea el español. Etiquetas y mensajes están en español en un solo lugar por lado (`Ticket.cs`, `src/web/src/messages.ts`); el change `c0-4-1` decide el mecanismo de traducción.
+- Que la restricción `CHECK` de un campo de opción baste: se escribe una vez, al crear la columna. Cambiar las opciones de un campo ya creado necesitará migraciones versionadas.
 
 ## Goals / Non-Goals
 

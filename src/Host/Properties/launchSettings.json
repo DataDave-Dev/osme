@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Osme.Host": {
+      "commandName": "Project",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
+    }
+  }
+}

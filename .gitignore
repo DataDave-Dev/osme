@@ -6,3 +6,7 @@ dist/
 *.local.*
 .vs/
 .idea/
+artifacts/
+src/Host/wwwroot/
+test-results/
+playwright-report/
