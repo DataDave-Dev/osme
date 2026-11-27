@@ -14,6 +14,19 @@ Lee, en este orden:
 
 `documents/` es la fuente de verdad. Un change no reabre una decisión de `documents/decisiones/`; si hay que cambiarla, se escribe una decisión nueva que la reemplaza.
 
+## La IA no supone nada (obligatorio)
+
+Todo lo que se construye o se escribe sale de una decisión de un desarrollador. Un agente de IA propone y pregunta; no decide.
+
+- **Ante cualquier duda, pregunta antes de escribir.** Alcance, comportamiento, nombres, reglas de negocio, valores (plazos, límites, tamaños), librerías, estructura de datos y seguridad: nada se da por sabido.
+- **Pregunta con opciones.** Cada pregunta trae las alternativas, lo que implica cada una y cuál recomiendas. Recomendar no es decidir.
+- **No llenes huecos con "lo habitual" ni con "lo más seguro".** Si `documents/` o el change en curso no lo dicen, falta una decisión: se pregunta.
+- **Lo que `documents/` deja "al constructor" también se pregunta.** El agente trae la propuesta; el desarrollador la autoriza.
+- **Nada de "asumido" en silencio.** Si un artefacto necesita un valor que nadie ha decidido, queda marcado como pregunta abierta, sin valor, hasta que un desarrollador responda.
+- **Las preguntas van juntas y antes**, no repartidas a mitad del trabajo, y se hacen al terminar de leer, no después de escribir.
+- **Cada decisión queda escrita** con quién la tomó y la fecha: en `documents/decisiones/` si vale para todo el proyecto, o en el `design.md` del change si solo vale ahí.
+- **Una decisión tomada no se reabre** ni se reinterpreta. Si parece chocar con otra, se pregunta cuál manda.
+
 ## Clave y prefijo de los changes de OpenSpec (obligatorio)
 
 Todo change lleva una clave **FASE-SPRINT-CHANGE** y su carpeta empieza con la letra `c` seguida de esa clave:

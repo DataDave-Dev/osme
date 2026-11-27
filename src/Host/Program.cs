@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using Npgsql;
+using Osme.Core.Access;
 using Osme.Core.Documents;
 using Osme.Core.Packages;
 using Osme.Host;
@@ -22,13 +23,16 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 var app = builder.Build();
 
+// The core's own tables come first: packages point at them.
+await using var dataSource = NpgsqlDataSource.Create(connectionString);
+await CoreSchema.EnsureAsync(dataSource);
+
 var packagesPath = Path.GetFullPath(
     builder.Configuration["Osme:PackagesPath"] ?? "packages",
     builder.Environment.ContentRootPath);
 var packages = PackageLoader.Load(packagesPath, app.Logger);
 var documents = packages.SelectMany(p => p.Documents).ToDictionary(d => d.Key);
 
-await using var dataSource = NpgsqlDataSource.Create(connectionString);
 var store = new DocumentStore(dataSource);
 foreach (var document in documents.Values)
     await store.EnsureStructureAsync(document);

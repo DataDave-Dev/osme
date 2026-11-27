@@ -23,3 +23,5 @@ Una decisión por archivo: qué se decidió, por qué y qué se descartó. Los n
 | 0017 | [Comunicación entre módulos: zonas de tablas, eventos y tareas](0017-comunicacion-entre-modulos.md) |
 | 0018 | [Firma del instalador: sin firma por ahora, SignPath a considerar](0018-firma-del-instalador.md) |
 | 0019 | [Convenciones de base de datos](0019-convenciones-de-base-de-datos.md) |
+| 0020 | [Roles editables y creables por el cliente](0020-roles-editables.md) |
+| 0021 | [Acceso: contraseñas, sesiones y conexión cifrada](0021-acceso.md) |

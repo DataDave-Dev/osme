@@ -68,10 +68,14 @@ public class TicketTests
         app.CreateClient();
 
         var tables = await database.ScalarAsync<string>("""
-            SELECT string_agg(table_schema || '.' || table_name, ',' ORDER BY 1) FROM information_schema.tables
+            SELECT string_agg(table_schema || '.' || table_name, ',' ORDER BY table_schema, table_name) FROM information_schema.tables
             WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
             """);
 
-        Assert.Equal("itdesk.ticket", tables);
+        // The core keeps only its own seven tables; nothing of ItDesk leaks into it.
+        Assert.Equal(
+            "core.company,core.role,core.role_permission,core.role_user_account,core.session,core.setting,"
+            + "core.user_account,itdesk.ticket",
+            tables);
     }
 }
