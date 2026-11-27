@@ -26,6 +26,6 @@ Servidor .NET (C#) · PostgreSQL · interfaz React + TypeScript.
 
 ## Licencia
 
-GNU Lesser General Public License, versión 3. Ver [LICENSE](LICENSE) y [LICENSE.GPL](LICENSE.GPL).
+GNU Lesser General Public License, versión 3 o posterior (`LGPL-3.0-or-later`). Ver [LICENSE](LICENSE) y [LICENSE.GPL](LICENSE.GPL).
 
 Las extensiones de terceros pueden publicarse bajo su propia licencia.

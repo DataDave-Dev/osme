@@ -12,6 +12,7 @@ context: |
 
     1. documents/README.md                          índice
     2. documents/arquitectura/arquitectura.md       cómo está armado el sistema
+       documents/arquitectura/base-de-datos.md      convenciones de tablas y columnas
     3. documents/decisiones/                         por qué, una decisión por archivo
     4. documents/hoja-de-ruta/hoja-de-ruta.md        orden de las fases
     5. documents/fases/<fase>/diseno.md              alcance de la fase en curso

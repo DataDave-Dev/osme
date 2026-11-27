@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-27 · Estado: **aprobado por DataDave-Dev el 2026-11-27** · Relacionado: [arquitectura](../../arquitectura/arquitectura.md), [hoja de ruta](../../hoja-de-ruta/hoja-de-ruta.md)
 
-Marcas: **[D]** decidido por DataDave-Dev · **[P]** propuesta pendiente de confirmar, corregible.
+Todo lo aquí escrito está decidido por DataDave-Dev. La marca **[D]** señala una decisión explícita; ya no quedan propuestas pendientes (autorizadas el 2026-11-27).
 
 ## 1. Intención
 
@@ -47,7 +47,7 @@ El empleado común tiene una cuenta ligera que solo ve el autoservicio; no ve el
 └────────────────────────────────────────────┘
 ```
 
-Levanta tickets (formulario o correo), ve el estado de los suyos, consulta la base de conocimiento y ve sus equipos asignados. El portal es una pieza del núcleo **[P]**, porque se reutiliza en Soporte a clientes (fase 7) y en futuros autoservicios.
+Levanta tickets (formulario o correo), ve el estado de los suyos, consulta la base de conocimiento y ve sus equipos asignados. El portal es una pieza del núcleo **[D]**, porque se reutiliza en Soporte a clientes (fase 7) y en futuros autoservicios.
 
 ### 2.4 Base (núcleo)
 
@@ -59,7 +59,7 @@ Levanta tickets (formulario o correo), ve el estado de los suyos, consulta la ba
 - **Organización [D]**: varias empresas, sucursales, departamentos y directorio de empleados.
 - **TI interno con varias empresas [D]**: configurable. De fábrica una sola mesa atiende a todas (mismos técnicos, misma base de conocimiento, equipos transferibles entre empresas); se puede separar por empresa.
 - **Red [D]**: de fábrica funciona en la red local, con conexión cifrada y un nombre fijo (las etiquetas QR llevan esa dirección impresa). El acceso desde internet es opcional, con guía paso a paso.
-- **Firma de paquetes [P]**: la verificación existe desde la 0.1. Los paquetes oficiales van firmados por el proyecto; un administrador puede instalar uno sin firma, con advertencia clara.
+- **Firma de paquetes [D]**: la verificación existe desde la 0.1. Los paquetes oficiales van firmados por el proyecto; un administrador puede instalar uno sin firma, con advertencia clara.
 - **Idiomas [D]**: español e inglés desde el inicio.
 - **Configuración por pantalla [D]**: campos personalizados, flujos de estados con aprobaciones, formatos de impresión/PDF y reglas automáticas ("si pasa X, haz Y").
   - Profundidad en esta fase **[D]**: sólida, sin diseñador visual. Formatos: plantillas editables con logo, textos y campos a insertar. Reglas: se arman eligiendo de listas (cuándo, condiciones, qué hacer). Los diseñadores visuales llegan en fases posteriores.
@@ -74,7 +74,7 @@ Levanta tickets (formulario o correo), ve el estado de los suyos, consulta la ba
 - Actualizador: avisa de versión nueva y la instala con un clic, respaldando antes.
 - Respaldos automáticos programados y restauración sencilla.
 - Linux y Mac: paquete de servidor sencillo (un comando o Docker) que deja todo funcionando, con actualización y respaldos. El instalador gráfico de doble clic es solo para Windows en esta fase.
-- Certificado de firma: por ahora no se cuenta con uno **[D]**. El instalador de Windows se publica sin firma; Windows mostrará "Windows protegió su PC" y el usuario continúa con Más información → Ejecutar de todas formas. La página de descarga y el README explican ese paso con captura de pantalla. No bloquea construir ni publicar. Cuando el repositorio sea público y haya algo instalable, solicitar firma gratuita para proyectos open source (SignPath Foundation), confirmando entonces sus requisitos **[P]**.
+- Certificado de firma: por ahora no se cuenta con uno **[D]**. El instalador de Windows se publica sin firma; Windows mostrará "Windows protegió su PC" y el usuario continúa con Más información → Ejecutar de todas formas. La página de descarga y el README explican ese paso con captura de pantalla. No bloquea construir ni publicar. Cuando el repositorio sea público y haya algo instalable, solicitar firma gratuita para proyectos open source (SignPath Foundation), confirmando entonces sus requisitos (por evaluar, ver decisión 0018).
 
 ## 2.6 Capacidad y criterio de terminado **[D]**
 
@@ -108,11 +108,11 @@ Levanta tickets (formulario o correo), ve el estado de los suyos, consulta la ba
 | **B** | **Entregas verticales**: cada entrega atraviesa instalador, núcleo, pantalla y módulo, y deja algo usable | Cada sprint se puede probar de punta a punta; la base crece solo con lo que un uso real pide | Algunas piezas de la base se retocan al llegar la siguiente entrega |
 | C | Módulo primero a mano y extraer la base después | Tickets funcionando muy rápido | Contradice el enfoque de documentos declarados ya aprobado |
 
-**Elegido: B [P]**, coherente con que cada fase funcione de punta a punta.
+**Elegido: B [D]**, coherente con que cada fase funcione de punta a punta.
 
-## 6. Entregas **[P]**
+## 6. Entregas **[D]**
 
-El alcance es de DataDave-Dev; el corte en entregas y su orden son una propuesta. Cada entrega se puede instalar y usar. Cuántos sprints toma cada una se estima al armar el backlog.
+El alcance es de DataDave-Dev; el corte en entregas y su orden también están aprobados. Cada entrega se puede instalar y usar. Cuántos sprints toma cada una se estima al armar el backlog.
 
 | Entrega | Qué funciona al terminar |
 |---|---|
@@ -124,7 +124,7 @@ El alcance es de DataDave-Dev; el corte en entregas y su orden son una propuesta
 | **0.6 Conocimiento y tableros** | Base de conocimiento y tableros de indicadores |
 | **0.7 Instalación completa e integración** | Actualizador, respaldos, paquetes de servidor para Linux y Mac; webhooks e importar/exportar; avisos por Telegram y WhatsApp (API oficial) |
 
-Propuestas dentro de las entregas **[P]**:
+Dentro de las entregas **[D]**:
 
 - **WhatsApp y Telegram se construyen como extensiones**, no dentro del núcleo. Dependen de servicios externos con sus propias cuentas y reglas, y así sirven de primera prueba real del mecanismo de extensiones instaladas desde archivo. El núcleo ofrece el punto de extensión "canal de aviso"; correo y campana son canales incluidos.
 - El actualizador y los respaldos van en la 0.7, pero desde la 0.1 la instalación se hace de forma que actualizar no pierda datos.

@@ -29,13 +29,14 @@ Es el primer change de la entrega 0.1 (`documents/fases/fase-00-base-ti-interno/
 | Varias empresas, sucursales, empleados | entrega 0.2 |
 | Campos personalizados, flujos, reglas | entrega 0.5 |
 | Bitácora de eventos y cola de tareas | entrega 0.3, cuando el correo las necesite |
+| Folio visible del ticket (servicio de folios del núcleo) | change `c0-3-1-el-ticket-se-atiende` |
 
 En este change los paquetes se cargan desde la carpeta de compilación. Instalarlos desde archivo llega con el instalador.
 
-## Preguntas abiertas
+## Preguntas resueltas
 
-- **Nombre en código del módulo TI interno.** Asumido: `ItDesk`, esquema `itdesk`. Cambiarlo después cuesta una migración.
-- **Versión de .NET.** Asumida: la LTS vigente al iniciar el sprint. El SDK no está instalado en la máquina de desarrollo; es la primera tarea.
+- **Nombre en código del módulo TI interno:** `ItDesk`, esquema `itdesk`. Autorizado el 2026-11-27.
+- **Versión de .NET:** la LTS vigente al iniciar el sprint. Autorizado el 2026-11-27. El SDK no está instalado en la máquina de desarrollo; es la primera tarea.
 
 ## Capabilities
 

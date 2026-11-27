@@ -10,7 +10,7 @@ Cada módulo tiene un menú donde se descargan extensiones, gratuitas o de pago.
 
 - Es la vía de ingreso del proyecto: los módulos oficiales son libres y completos, sin edición de pago.
 - Mientras no exista la tienda, las extensiones se instalan desde archivo; el formato de extensión existe desde la fase 0.
-- Propuestas pendientes de confirmar: tras la revisión la extensión se firma y la instalación verifica la firma; las de pago se validan con licencia ligada a la instalación; los servicios públicos de cada módulo son una interfaz versionada.
+- Además: tras la revisión la extensión se firma y la instalación verifica la firma; las de pago se validan con licencia ligada a la instalación; los servicios públicos de cada módulo son una interfaz versionada.
 
 ## Alternativas descartadas
 

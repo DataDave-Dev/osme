@@ -24,9 +24,9 @@ Ordenadas por dependencia real: primero las herramientas, luego la frontera, des
 ## 4. Motor de documentos
 
 - [ ] 4.1 Atributos de declaración y traducción de una clase al modelo interno de descripción (texto, texto largo, opción, fecha y hora). Cierra: prueba unitaria sobre una clase de ejemplo.
-- [ ] 4.2 Generador de estructura: crea el esquema del paquete y la tabla si no existen, y agrega columnas faltantes sin tocar las existentes. Cierra: prueba contra Postgres real que arranca dos veces, la segunda con un campo más, y conserva los registros.
+- [ ] 4.2 Generador de estructura: crea el esquema del paquete y la tabla si no existen, y agrega columnas faltantes sin tocar las existentes. Nombres, tipos y columnas fijas según `documents/arquitectura/base-de-datos.md`. Cierra: prueba contra Postgres real que arranca dos veces, la segunda con un campo más, y conserva los registros.
 - [ ] 4.3 Validación contra el modelo: obligatorio, longitud, opciones, campo desconocido, campos de solo lectura ignorados. Cierra: pruebas unitarias, una por regla.
-- [ ] 4.4 Alta y consultas con SQL parametrizado; identificador y fecha asignados por el servidor. Cierra: prueba contra Postgres real que da de alta, consulta por identificador y lista en orden.
+- [ ] 4.4 Alta y consultas con SQL parametrizado; identificador UUID versión 7 y fechas asignados por el servidor. Cierra: prueba contra Postgres real que da de alta, consulta por identificador y lista en orden.
 - [ ] 4.5 Rutas `GET /api/meta/...`, `GET /api/docs/...`, `GET /api/docs/.../{id}`, `POST /api/docs/...` con una sola forma de respuesta para éxito y error. Cierra: pruebas de integración que cubren cada escenario de `specs/motor-de-documentos`.
 - [ ] 4.6 El servidor escucha solo en `localhost`. Cierra: `curl` desde la máquina responde; `curl` a la IP de red de la misma máquina no conecta.
 

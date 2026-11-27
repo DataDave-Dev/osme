@@ -34,12 +34,14 @@ Detalle completo: `documents/proceso/openspec.md`.
 
 ## Reglas del proyecto
 
+- **Base de datos.** Toda tabla sigue `documents/arquitectura/base-de-datos.md`: el esquema es el prefijo (`itdesk.ticket`), tablas en singular, `id` UUID v7, columnas fijas, y sin llaves foráneas entre paquetes distintos. Las extensiones usan esquema `x_<autor>_<nombre>`.
 - **Paquetes aparte.** Ningún módulo usa tablas ni código interno de otro paquete: solo servicios públicos y eventos. Cada paquete tiene su propio esquema de Postgres.
 - **Documentos declarados.** Un documento se declara una vez en el servidor. No escribas tablas, rutas ni formularios a mano para algo que el motor de documentos ya genera.
 - **Nada de un país en el núcleo** ni en módulos genéricos. Lo fiscal va en paquetes de localización.
 - **Idioma.** Código en inglés. Specs y documentación en español por ahora; `SHALL`, `WHEN`, `THEN` y encabezados de delta en inglés. Ningún texto visible al usuario se escribe fijo en el código.
 - **Stack.** Servidor .NET (C#), PostgreSQL, interfaz React + TypeScript + Vite. En la interfaz, solo `pnpm`.
 - **Pruebas primero** y contra Postgres real para todo lo que toque la base.
+- **Licencia.** LGPL versión 3 o posterior (`LGPL-3.0-or-later`); es el identificador para el aviso de licencia en archivos de código.
 - **Seguridad.** Sin secretos en el código. SQL siempre con parámetros. Todo lo que entra por la API se valida.
 
 ## Git

@@ -12,7 +12,7 @@
 
 | Carpeta | Contenido |
 |---|---|
-| [arquitectura/](arquitectura/arquitectura.md) | Diseño general del sistema |
+| [arquitectura/](arquitectura/arquitectura.md) | Diseño general del sistema y [convenciones de base de datos](arquitectura/base-de-datos.md) |
 | [decisiones/](decisiones/README.md) | Una decisión por archivo, numeradas |
 | [hoja-de-ruta/](hoja-de-ruta/hoja-de-ruta.md) | Fases y su orden |
 | [fases/](fases/) | Diseño detallado de cada fase, una carpeta por fase |
@@ -28,6 +28,6 @@
 
 ## Convenciones
 
-- En los documentos de diseño, **[D]** marca lo decidido por DataDave-Dev y **[P]** lo propuesto y todavía corregible.
+- En los documentos de diseño, **[D]** marca una decisión de DataDave-Dev. Una propuesta nueva todavía sin autorizar se marca **[P]** hasta que se confirme. Hoy no hay ninguna pendiente.
 - La documentación está en español; la versión en inglés está pendiente.
 - El código irá en inglés.

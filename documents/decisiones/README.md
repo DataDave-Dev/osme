@@ -22,3 +22,4 @@ Una decisión por archivo: qué se decidió, por qué y qué se descartó. Los n
 | 0016 | [Inteligencia artificial como paquete opcional](0016-inteligencia-artificial.md) |
 | 0017 | [Comunicación entre módulos: zonas de tablas, eventos y tareas](0017-comunicacion-entre-modulos.md) |
 | 0018 | [Firma del instalador: sin firma por ahora, SignPath a considerar](0018-firma-del-instalador.md) |
+| 0019 | [Convenciones de base de datos](0019-convenciones-de-base-de-datos.md) |

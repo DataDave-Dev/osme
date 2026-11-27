@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-27 · Estado: **aprobado por DataDave-Dev el 2026-11-27** · Nombre: **OSME** (Open Source Modular Enterprise)
 
-Marcas: **[D]** decidido por DataDave-Dev · **[P]** propuesta pendiente de confirmar, corregible.
+Todo lo aquí escrito está decidido por DataDave-Dev. La marca **[D]** señala una decisión explícita; ya no quedan propuestas pendientes (autorizadas el 2026-11-27).
 
 El porqué de cada decisión y lo que se descartó está en [decisiones](../decisiones/README.md), una por archivo. Este documento describe cómo queda el sistema.
 
@@ -74,12 +74,12 @@ Requisitos **[D]**: corre en Windows, Linux y Mac sin problema; rápido; interfa
 |---|---|---|
 | Servidor | **.NET (C#)**, ejecutable autocontenido por sistema operativo | **[D]** |
 | Base de datos | Postgres | **[D]** |
-| Cliente | Navegador; sin instalar nada en la máquina del usuario | **[P]** |
-| Interfaz | React + TypeScript + Vite, servida por el mismo servidor | **[P]** |
+| Cliente | Navegador; sin instalar nada en la máquina del usuario | **[D]** |
+| Interfaz | React + TypeScript + Vite, servida por el mismo servidor | **[D]** |
 
 Por qué este stack y qué se descartó: [0004 stack](../decisiones/0004-stack-dotnet-react.md) y [0001 base de datos](../decisiones/0001-base-de-datos.md).
 
-Consecuencias de .NET **[P]**:
+Consecuencias de .NET **[D]**:
 
 - Un solo proceso desplegable (monolito modular). Cada paquete es un ensamblado que el servidor carga al arrancar o al instalarlo.
 - Para no escribir cada documento dos veces (C# y TypeScript), la declaración vive solo en el servidor, que la publica como metadatos; la interfaz es un dibujador genérico de formularios y listas a partir de esos metadatos. Los campos personalizados del cliente llegan por la misma vía.
@@ -108,7 +108,7 @@ Un solo repositorio (`osme`) para núcleo, módulos oficiales, localizaciones of
 
 Tres tipos de paquete, mismo formato: **módulo**, **localización**, **extensión**.
 
-### 4.1 Núcleo **[P]**
+### 4.1 Núcleo **[D]**
 
 Solo lo que todo módulo necesita:
 
@@ -127,7 +127,7 @@ El núcleo no contiene lógica contable, fiscal ni comercial.
 
 Tres conceptos distintos: **usuario** (cuenta para entrar), **empleado** (persona de la empresa, en el directorio del núcleo; puede no tener usuario) y **cuenta de portal** (usuario ligero que solo ve el autoservicio).
 
-### 4.2 Contrato de un paquete **[P]**
+### 4.2 Contrato de un paquete **[D]**
 
 Cada paquete declara:
 
@@ -153,7 +153,7 @@ Reglas 4 y 5 aceptadas por DataDave-Dev. **[D]**
 **Capa 1 — configuración desde pantalla** (se guarda como datos del cliente):
 campos personalizados en cualquier documento, catálogos, flujos de estados y aprobaciones, series, formatos de impresión, reglas de generación de pólizas, parámetros por empresa.
 
-Los campos personalizados se guardan en una columna JSONB del documento ("cajón flexible") **[P]** — DataDave-Dev pidió recomendación y esta es: simple y sin modificar la estructura de la base con usuarios trabajando. Límite conocido: reportes pesados sobre esos campos; ruta de mejora: promoverlos a columnas reales.
+Los campos personalizados se guardan en una columna JSONB del documento ("cajón flexible") **[D]**: simple y sin modificar la estructura de la base con usuarios trabajando. Límite conocido: reportes pesados sobre esos campos; ruta de mejora: promoverlos a columnas reales.
 
 **Capa 2 — extensiones**: un paquete más, que depende del módulo que extiende. Puede agregar documentos y campos, suscribirse a eventos y usar puntos de extensión. Nunca edita el paquete original.
 
@@ -163,7 +163,7 @@ Como la configuración es dato y las extensiones son paquetes aparte, actualizar
 
 Publican el proyecto y terceros; toda extensión se revisa antes de aparecer y el proyecto cobra comisión sobre las de pago. **[D]**
 
-Propuestas sobre la tienda **[P]**:
+Sobre la tienda **[D]**:
 
 - Tras la revisión la extensión se firma, y la instalación solo acepta paquetes firmados. Así el código descargado se trata como de confianza y no hace falta aislarlo. Límite conocido: no escala a miles de autores; ruta de mejora: aislamiento de extensiones.
 - Las extensiones de pago se validan con una licencia ligada a la instalación.
@@ -176,9 +176,9 @@ Paquete de país que aporta: impuestos, plantilla de catálogo de cuentas, docum
 ### 4.5 Despliegue y aislamiento
 
 - El proyecto no opera nube ni hospeda a nadie. Quien quiera usar el software lo instala donde decida: su oficina o una nube que contrate por su cuenta. **[D]**
-- Por lo tanto una instalación = una organización = una base de datos Postgres. No hay varios clientes dentro de una instalación; quien quiera dar servicio a varios levanta una instalación por cada uno. **[P]**
+- Por lo tanto una instalación = una organización = una base de datos Postgres. No hay varios clientes dentro de una instalación; quien quiera dar servicio a varios levanta una instalación por cada uno. **[D]**
 - Única excepción: la tienda (catálogo, revisión, firma, cobro y licencias de extensiones) es un servicio central que opera el proyecto. **[D]**
-- Dentro de una base, varias empresas separadas por `empresa_id`, aplicado por el motor de documentos y no por cada módulo. **[P]**
+- Dentro de una base, varias empresas separadas por `empresa_id`, aplicado por el motor de documentos y no por cada módulo. **[D]**
 - Multi-empresa **[D]**: cada documento declara su alcance. Catálogos (terceros, productos) compartidos entre empresas por defecto, y configurables como exclusivos de una empresa. Contabilidad, folios e inventario siempre por empresa. Deja abierta la puerta a operaciones entre empresas y consolidación.
 - Cada instalación descarga solo los paquetes que usa.
 - **Instalador de Windows [D]**: doble clic, sin conocimientos técnicos. Empaqueta la aplicación, Postgres, el servicio de Windows y un actualizador. Es un subproyecto propio; el resto del diseño no depende de él, pero obliga a que instalar o actualizar un paquete no requiera línea de comandos.
@@ -193,7 +193,7 @@ Paquetes base, chicos y fuera del núcleo: **Productos** (artículos, listas de 
 
 ### 4.7 Inteligencia artificial
 
-OSME soporta integración con IA (ChatGPT, Claude, etc.) por API desde el inicio. **[D]**
+OSME soporta integración con asistentes de IA externos por API desde el inicio. **[D]**
 
 Decidido **[D]**:
 
@@ -201,13 +201,13 @@ Decidido **[D]**:
 - **Tres usos**:
   1. Asistente dentro del ERP: chat que consulta y opera por el usuario.
   2. Funciones de IA en módulos: leer una factura en PDF y capturarla, sugerir cuenta contable, clasificar tickets, redactar cobranza.
-  3. IA externa que opera el ERP: el usuario conecta su ChatGPT o Claude desde fuera.
+  3. IA externa que opera el ERP: el usuario conecta desde fuera el asistente de IA que ya usa.
 - **Cada instalación pone su propia llave** del proveedor que elija y le paga directo. El proyecto no revende IA ni opera nada.
 - **Qué puede hacer sola la IA es configurable por empresa**, por tipo de documento: qué requiere confirmación humana y qué no.
 
-Propuestas **[P]**:
+Además **[D]**:
 
-- El paquete de IA es neutral al proveedor: una sola interfaz interna y un adaptador por proveedor (OpenAI, Anthropic, modelos locales). Agregar otro proveedor es agregar un adaptador.
+- El paquete de IA es neutral al proveedor: una sola interfaz interna y un adaptador por proveedor, incluidos modelos locales. Agregar otro proveedor es agregar un adaptador.
 - La IA no ve tablas: usa lo mismo que el resto del sistema, las descripciones de documentos y los servicios públicos de cada módulo. Así un módulo o extensión nueva queda disponible para la IA sin trabajo extra.
 - La IA actúa siempre con los permisos del usuario que la usa, nunca más.
 - Valor de fábrica: toda acción que cambia datos pide confirmación, hasta que la empresa lo relaje.

@@ -20,6 +20,8 @@ Nada de este documento está **verificado ejecutándolo**: todo es **supuesto** 
 
 ## Decisions
 
+Las ocho decisiones fueron autorizadas por DataDave-Dev el 2026-11-27.
+
 ### 1. La declaración de un documento es una clase C# con atributos
 
 Un documento se declara como una clase con propiedades anotadas (etiqueta, obligatorio, opciones). El núcleo la lee por reflexión al cargar el paquete.
@@ -37,6 +39,8 @@ El núcleo genera `CREATE TABLE`, `INSERT` y `SELECT` a partir del modelo de des
 - `// ponytail:` en este change no hay filtros, orden configurable ni paginación; la lista trae las filas más recientes con un tope fijo. Se amplía cuando una pantalla real lo pida.
 
 ### 3. Migración mínima: crear lo que falta, nunca borrar
+
+Las tablas siguen `documents/arquitectura/base-de-datos.md`: esquema del paquete sin prefijo en la tabla, nombre en singular, `id` UUID versión 7 y las columnas fijas. En este change `company_id`, `created_by` y `updated_by` existen pero quedan vacías y sin llave foránea, porque `core.company` y `core.user_account` nacen en el change `c0-2-1-entrar-al-sistema`.
 
 Al cargar un paquete, el núcleo crea su esquema y sus tablas si no existen, y agrega las columnas que falten. No borra ni cambia columnas existentes.
 
@@ -66,7 +70,7 @@ GET  /api/docs/{paquete}.{documento}/{id}   uno
 POST /api/docs/{paquete}.{documento}        alta
 ```
 
-Mismas rutas para cualquier documento de cualquier paquete. Los identificadores son UUID generados por el servidor.
+Mismas rutas para cualquier documento de cualquier paquete. Los identificadores son UUID versión 7 generados por el servidor.
 
 - **Descartado: rutas escritas por cada módulo.** Es justo el trabajo repetido que el enfoque de documentos declarados evita.
 

@@ -4,7 +4,7 @@ Fecha: 2026-11-27 · Estado: decidido · Decidió: DataDave-Dev · Relacionado: 
 
 ## Decisión
 
-El núcleo y los módulos oficiales se publican bajo LGPL.
+El núcleo y los módulos oficiales se publican bajo LGPL versión 3 o posterior.
 
 ## Por qué
 
@@ -16,9 +16,9 @@ El núcleo y los módulos oficiales se publican bajo LGPL.
 - `LICENSE`: texto de la GNU Lesser General Public License, versión 3.
 - `LICENSE.GPL`: texto de la GNU General Public License, versión 3. La LGPL 3 se define como permisos adicionales sobre la GPL 3 y pide acompañarse de ella.
 
-## Pendiente
+## Versión
 
-Decidir si el código se publica como "solo versión 3" o "versión 3 o posterior". Importa al poner el aviso de licencia en los archivos de código; hasta entonces el repositorio dice solo "LGPL versión 3".
+**LGPL versión 3 o posterior** (`LGPL-3.0-or-later`). Permite adoptar una versión futura de la licencia sin pedir permiso a cada contribuidor. Es el identificador que llevará el aviso de licencia en los archivos de código.
 
 ## Alternativas descartadas
 
