@@ -48,6 +48,6 @@ Ordenadas por dependencia real: primero las herramientas, luego la frontera, des
 - [x] 7.1 Prueba de navegador: levantar un ticket y verlo en la lista. Cierra: la prueba pasa contra el servidor y Postgres reales.
 - [x] 7.2 Comprobar que un campo nuevo aparece sin tocar la interfaz: agregar un campo temporal a la declaración, reiniciar, verlo en formulario y lista, y retirarlo. Cierra: comprobación visible, anotada en este archivo con fecha.
   - 2026-11-27: se agregó `Location` ("Ubicación") a `Ticket.cs`, se reinició el servidor y una prueba de navegador temporal lo llenó en el formulario y lo vio como columna de la lista, con `src/web` sin cambios. Campo y prueba retirados.
-- [ ] 7.3 Flujo de integración continua que compila, corre la verificación de frontera y todas las pruebas. Cierra: el flujo pasa en verde en la primera subida a GitHub.
-  - Flujo escrito en `.github/workflows/ci.yml` y sus pasos corridos en local en verde (2026-11-27). Falta la primera subida a GitHub para cerrarla.
+- [x] 7.3 Flujo de integración continua que compila, corre la verificación de frontera y todas las pruebas. Cierra: el flujo pasa en verde en la primera subida a GitHub.
+  - 2026-11-27: el flujo pasó en verde en la primera subida a GitHub (commit `d26cfa3`, ejecución 46065210429).
 - [x] 7.4 Anotar en `design.md` qué supuestos quedaron verificados y cuáles cambiaron. Cierra: la sección de contexto ya no dice que nada está verificado.
