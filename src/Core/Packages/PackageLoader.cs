@@ -2,20 +2,23 @@
 using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
+using Osme.Core.Access;
 using Osme.Core.Contracts;
 using Osme.Core.Documents;
 
 namespace Osme.Core.Packages;
 
-public sealed record PackageManifest(string Name, string Version, IReadOnlyList<string> DependsOn)
+/// <param name="Label">What a person reads as the name of the package; its name when it declares none.</param>
+public sealed record PackageManifest(string Name, string Version, IReadOnlyList<string> DependsOn, string Label)
 {
     public static PackageManifest? Read(Assembly assembly) =>
         assembly.GetCustomAttribute<PackageAttribute>() is { } package
-            ? new PackageManifest(package.Name, package.Version, package.DependsOn)
+            ? new PackageManifest(package.Name, package.Version, package.DependsOn, package.Label ?? package.Name)
             : null;
 }
 
-public sealed record LoadedPackage(PackageManifest Manifest, IReadOnlyList<DocumentDescription> Documents);
+public sealed record LoadedPackage(
+    PackageManifest Manifest, IReadOnlyList<DocumentDescription> Documents, IReadOnlyList<FactoryRole> FactoryRoles);
 
 /// <summary>Each package gets its own context; anything the host already has is shared from the host.</summary>
 public sealed class PackageLoadContext(string assemblyPath)
@@ -47,12 +50,13 @@ public static class PackageLoader
     /// <summary>
     /// Loads the core and every package found in <paramref name="packagesPath"/> (one folder per
     /// package, holding an assembly with the folder's name), in dependency order.
-    /// A package whose dependencies are not all present is skipped and logged.
+    /// A package whose dependencies are not all present, or whose factory roles are badly
+    /// declared, is skipped and logged.
     /// </summary>
     public static IReadOnlyList<LoadedPackage> Load(string packagesPath, ILogger logger)
     {
         var core = PackageManifest.Read(typeof(PackageAttribute).Assembly)!;
-        var loaded = new List<LoadedPackage> { new(core, []) };
+        var loaded = new List<LoadedPackage> { new(core, [], []) };
         var pending = Discover(packagesPath, logger);
 
         while (pending.Count > 0)
@@ -61,7 +65,15 @@ public static class PackageLoader
             if (ready is null) break;
 
             pending.Remove(ready);
-            loaded.Add(new LoadedPackage(ready.Manifest, DocumentsOf(ready)));
+            var documents = DocumentsOf(ready);
+            if (!TryReadFactoryRoles(ready, documents, out var factoryRoles, out var problem))
+            {
+                logger.LogWarning("Skipped package {Package}: {Problem}", ready.Manifest.Name, problem);
+                ready.Context.Unload();
+                continue;
+            }
+
+            loaded.Add(new LoadedPackage(ready.Manifest, documents, factoryRoles));
             logger.LogInformation("Loaded package {Package} {Version}", ready.Manifest.Name, ready.Manifest.Version);
         }
 
@@ -110,6 +122,42 @@ public static class PackageLoader
             candidates.Add(new Candidate(manifest!, assembly, context));
         }
         return candidates;
+    }
+
+    /// <summary>
+    /// The factory roles a package declares. False, with the reason, when one of them is badly
+    /// declared: a name that is not an identifier or is repeated, a document that is not the
+    /// package's own, the same document read with two scopes, or creating without reading.
+    /// </summary>
+    private static bool TryReadFactoryRoles(
+        Candidate package, List<DocumentDescription> documents, out List<FactoryRole> roles, out string problem)
+    {
+        roles = [];
+        problem = "";
+        var own = documents.ToDictionary(d => d.Name);
+        var name = package.Manifest.Name;
+
+        foreach (var declared in package.Assembly.GetCustomAttributes<FactoryRoleAttribute>())
+        {
+            if (!DocumentModelBuilder.IsIdentifier(declared.Name))
+                problem = $"factory role '{declared.Name}' does not have a valid name";
+            else if (roles.Any(r => r.Name == declared.Name))
+                problem = $"factory role '{declared.Name}' is declared more than once";
+            else if (declared.ReadAll.Concat(declared.ReadOwn).Concat(declared.Create).FirstOrDefault(d => !own.ContainsKey(d)) is { } foreign)
+                problem = $"factory role '{declared.Name}' grants document '{foreign}', which package '{name}' does not declare";
+            else if (declared.ReadAll.Intersect(declared.ReadOwn).FirstOrDefault() is { } twice)
+                problem = $"factory role '{declared.Name}' reads document '{twice}' with two scopes";
+            else if (declared.Create.Except(declared.ReadAll).Except(declared.ReadOwn).FirstOrDefault() is { } blind)
+                problem = $"factory role '{declared.Name}' creates document '{blind}' without reading it";
+            if (problem.Length > 0) return false;
+
+            var grants = new List<Grant>();
+            grants.AddRange(declared.ReadAll.Distinct().Select(d => new Grant(PermissionCatalog.ReadOf(own[d]), Grant.All)));
+            grants.AddRange(declared.ReadOwn.Distinct().Select(d => new Grant(PermissionCatalog.ReadOf(own[d]), Grant.Own)));
+            grants.AddRange(declared.Create.Distinct().Select(d => new Grant(PermissionCatalog.CreateOf(own[d]), Grant.All)));
+            roles.Add(new FactoryRole(name, declared.Name, declared.Label, grants));
+        }
+        return true;
     }
 
     private static List<DocumentDescription> DocumentsOf(Candidate package) =>

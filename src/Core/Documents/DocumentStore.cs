@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 using System.Text;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace Osme.Core.Documents;
+
+/// <summary>Who creates a record: the account of the session and the company of the installation.</summary>
+public sealed record Author(Guid UserAccountId, Guid CompanyId);
 
 /// <summary>
 /// The only place that writes SQL for documents. Names come from validated declarations and are
@@ -13,7 +17,16 @@ public sealed class DocumentStore(NpgsqlDataSource dataSource)
     // ponytail: fixed cap, newest first. Filters, sorting and paging arrive when a screen asks for them.
     private const int ListLimit = 100;
 
-    /// <summary>Creates the schema, the table and any missing column. Never drops or alters what exists.</summary>
+    // Every document table points at the core, which is always installed (base-de-datos.md, section 6).
+    private static readonly (string Column, string Target)[] CoreReferences =
+    [
+        ("company_id", "core.company"), ("created_by", "core.user_account"), ("updated_by", "core.user_account"),
+    ];
+
+    /// <summary>
+    /// Creates the schema, the table, any missing column and the missing foreign keys to the core,
+    /// each with its index. Never drops or alters what exists; rows with those columns empty stay as they are.
+    /// </summary>
     public async Task EnsureStructureAsync(DocumentDescription document, CancellationToken cancel = default)
     {
         var table = Table(document);
@@ -47,42 +60,76 @@ public sealed class DocumentStore(NpgsqlDataSource dataSource)
             await ddl.ExecuteNonQueryAsync(cancel);
         }
 
+        foreach (var (column, target) in CoreReferences)
+        {
+            // There is no ADD CONSTRAINT IF NOT EXISTS: look first.
+            var constraint = $"fk_{document.Name}__{column}";
+            await using (var find = new NpgsqlCommand(
+                "SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass($1) AND conname = $2", connection, transaction))
+            {
+                find.Parameters.AddWithValue(table);
+                find.Parameters.AddWithValue(constraint);
+                if (await find.ExecuteScalarAsync(cancel) is not null) continue;
+            }
+
+            await using var add = new NpgsqlCommand($"""
+                ALTER TABLE {table} ADD CONSTRAINT {Quote(constraint)} FOREIGN KEY ({Quote(column)}) REFERENCES {target} (id);
+                CREATE INDEX IF NOT EXISTS {Quote($"ix_{document.Name}__{column}")} ON {table} ({Quote(column)});
+                """, connection, transaction);
+            await add.ExecuteNonQueryAsync(cancel);
+        }
+
         await transaction.CommitAsync(cancel);
     }
 
+    /// <summary>The author and the company are filled here, from the session; the caller cannot set them.</summary>
     public async Task<Dictionary<string, object?>> InsertAsync(
-        DocumentDescription document, IReadOnlyDictionary<string, string?> values, CancellationToken cancel = default)
+        DocumentDescription document, IReadOnlyDictionary<string, string?> values, Author? author = null,
+        CancellationToken cancel = default)
     {
         var fields = Declared(document).ToList();
         var now = DateTimeOffset.UtcNow;
         var id = Guid.CreateVersion7(now);
 
         var columns = string.Join(", ", fields.Select(f => Quote(f.Name)));
-        var parameters = string.Join(", ", fields.Select((_, i) => $"${i + 3}"));
-        var sql = $"INSERT INTO {Table(document)} (id, created_at, updated_at{(fields.Count > 0 ? ", " + columns : "")}) "
-            + $"VALUES ($1, $2, $2{(fields.Count > 0 ? ", " + parameters : "")})";
+        var parameters = string.Join(", ", fields.Select((_, i) => $"${i + 5}"));
+        var sql = $"INSERT INTO {Table(document)} (id, created_at, updated_at, created_by, updated_by, company_id"
+            + $"{(fields.Count > 0 ? ", " + columns : "")}) "
+            + $"VALUES ($1, $2, $2, $3, $3, $4{(fields.Count > 0 ? ", " + parameters : "")})";
 
         await using var command = dataSource.CreateCommand(sql);
         command.Parameters.AddWithValue(id);
         command.Parameters.AddWithValue(now);
+        command.Parameters.Add(new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Uuid, Value = (object?)author?.UserAccountId ?? DBNull.Value });
+        command.Parameters.Add(new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Uuid, Value = (object?)author?.CompanyId ?? DBNull.Value });
         foreach (var field in fields)
             command.Parameters.AddWithValue((object?)values.GetValueOrDefault(field.Name) ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancel);
 
-        return (await GetAsync(document, id, cancel))!;
+        return (await GetAsync(document, id, null, cancel))!;
     }
 
-    public async Task<Dictionary<string, object?>?> GetAsync(DocumentDescription document, Guid id, CancellationToken cancel = default)
+    /// <summary>
+    /// The record, or null. With <paramref name="onlyCreatedBy"/>, only when that account created it:
+    /// somebody else's record is as absent as one that does not exist.
+    /// </summary>
+    public async Task<Dictionary<string, object?>?> GetAsync(
+        DocumentDescription document, Guid id, Guid? onlyCreatedBy = null, CancellationToken cancel = default)
     {
-        await using var command = dataSource.CreateCommand($"{Select(document)} WHERE id = $1");
+        await using var command = dataSource.CreateCommand(
+            $"{Select(document)} WHERE id = $1{(onlyCreatedBy is null ? "" : " AND created_by = $2")}");
         command.Parameters.AddWithValue(id);
+        if (onlyCreatedBy is { } owner) command.Parameters.AddWithValue(owner);
         return (await ReadAsync(command, cancel)).SingleOrDefault();
     }
 
-    public async Task<List<Dictionary<string, object?>>> ListAsync(DocumentDescription document, CancellationToken cancel = default)
+    /// <summary>Newest first. With <paramref name="onlyCreatedBy"/>, only the records that account created.</summary>
+    public async Task<List<Dictionary<string, object?>>> ListAsync(
+        DocumentDescription document, Guid? onlyCreatedBy = null, CancellationToken cancel = default)
     {
         await using var command = dataSource.CreateCommand(
-            $"{Select(document)} ORDER BY created_at DESC, id DESC LIMIT {ListLimit}");
+            $"{Select(document)}{(onlyCreatedBy is null ? "" : " WHERE created_by = $1")} ORDER BY created_at DESC, id DESC LIMIT {ListLimit}");
+        if (onlyCreatedBy is { } owner) command.Parameters.AddWithValue(owner);
         return await ReadAsync(command, cancel);
     }
 

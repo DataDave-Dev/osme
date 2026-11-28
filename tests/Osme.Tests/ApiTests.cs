@@ -32,7 +32,7 @@ public class ApiTests
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
 
-        var (status, body) = await Send(app.CreateClient(), HttpMethod.Get, "/api/packages");
+        var (status, body) = await Send(await app.AdministratorAsync(), HttpMethod.Get, "/api/packages");
 
         Assert.Equal(HttpStatusCode.OK, status);
         Assert.Equal(
@@ -46,7 +46,7 @@ public class ApiTests
         await using var database = await TestDatabase.CreateAsync();
         var empty = Directory.CreateTempSubdirectory("osme-packages-").FullName;
         await using var app = new OsmeApp(database.ConnectionString, empty);
-        var client = app.CreateClient();
+        var client = await app.AdministratorAsync();
 
         var packages = await Send(client, HttpMethod.Get, "/api/packages");
         var documents = await Send(client, HttpMethod.Get, "/api/meta");
@@ -62,7 +62,7 @@ public class ApiTests
     {
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
-        var client = app.CreateClient();
+        var client = await app.AdministratorAsync();
 
         var (status, body) = await Send(client, HttpMethod.Get, "/api/meta/itdesk.ticket");
 
@@ -100,7 +100,7 @@ public class ApiTests
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
 
-        AssertNotFound(await Send(app.CreateClient(), HttpMethod.Get, url));
+        AssertNotFound(await Send(await app.AdministratorAsync(), HttpMethod.Get, url));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class ApiTests
     {
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
-        var client = app.CreateClient();
+        var client = await app.AdministratorAsync();
 
         var (status, body) = await Send(client, HttpMethod.Post, Tickets, new { title = "Printer is down", priority = "high" });
 
@@ -131,7 +131,7 @@ public class ApiTests
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
         const string sentId = "11111111-1111-4111-8111-111111111111";
 
-        var (status, body) = await Send(app.CreateClient(), HttpMethod.Post, Tickets,
+        var (status, body) = await Send(await app.AdministratorAsync(), HttpMethod.Post, Tickets,
             new { title = "Mine", id = sentId, created_at = "2001-01-01T00:00:00Z" });
 
         Assert.Equal(HttpStatusCode.Created, status);
@@ -154,7 +154,7 @@ public class ApiTests
     {
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
-        var client = app.CreateClient();
+        var client = await app.AdministratorAsync();
 
         using var response = await client.PostAsync(Tickets, new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -178,7 +178,7 @@ public class ApiTests
         await using var database = await TestDatabase.CreateAsync();
         await using var app = new OsmeApp(database.ConnectionString, Repo.Packages);
 
-        using var response = await app.CreateClient().PostAsync(Tickets, new StringContent(json));
+        using var response = await (await app.AdministratorAsync()).PostAsync(Tickets, new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

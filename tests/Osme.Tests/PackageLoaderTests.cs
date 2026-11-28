@@ -14,7 +14,7 @@ public class PackageLoaderTests
 
         var manifest = PackageManifest.Read(context.LoadPackage());
 
-        Assert.Equal(new PackageManifest("itdesk", "0.1.0", []), manifest, ManifestComparer.Instance);
+        Assert.Equal(new PackageManifest("itdesk", "0.1.0", [], "TI interno"), manifest, ManifestComparer.Instance);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class PackageLoaderTests
         public static readonly ManifestComparer Instance = new();
 
         public bool Equals(PackageManifest? x, PackageManifest? y) =>
-            x is not null && y is not null && x.Name == y.Name && x.Version == y.Version && x.DependsOn.SequenceEqual(y.DependsOn);
+            x is not null && y is not null && x.Name == y.Name && x.Version == y.Version && x.Label == y.Label && x.DependsOn.SequenceEqual(y.DependsOn);
 
         public int GetHashCode(PackageManifest? manifest) => manifest?.Name.GetHashCode() ?? 0;
     }

@@ -38,23 +38,30 @@ public sealed class AccessDatabase : IAsyncDisposable
         };
     }
 
-    // ponytail: accounts are inserted by hand until the task that creates them (6.1) exists.
-    public async Task<Guid> AddAccountAsync(string username, bool isActive = true)
-    {
-        var id = Guid.CreateVersion7();
-        await using var command = Database.DataSource.CreateCommand("""
-            INSERT INTO core.user_account (id, username, display_name, password_hash, is_active, created_at, updated_at)
-            VALUES ($1, $2, $2, $3, $4, now(), now())
-            """);
-        command.Parameters.AddWithValue(id);
-        command.Parameters.AddWithValue(username);
-        command.Parameters.AddWithValue(PasswordHasher.Hash(Password));
-        command.Parameters.AddWithValue(isActive);
-        await command.ExecuteNonQueryAsync();
-        return id;
-    }
+    public Task<Guid> AddAccountAsync(string username, bool isActive = true) => Database.AddAccountAsync(username, isActive);
 
     public Task<long> SessionCountAsync() => Database.ScalarAsync<long>("SELECT count(*) FROM core.session");
 
     public ValueTask DisposeAsync() => Database.DisposeAsync();
+}
+
+public static class TestAccounts
+{
+    // ponytail: accounts are inserted by hand until the task that creates them (6.1) exists.
+    public static async Task<Guid> AddAccountAsync(
+        this TestDatabase database, string username, bool isActive = true, bool mustChangePassword = false)
+    {
+        var id = Guid.CreateVersion7();
+        await using var command = database.DataSource.CreateCommand("""
+            INSERT INTO core.user_account (id, username, display_name, password_hash, is_active, must_change_password, created_at, updated_at)
+            VALUES ($1, $2, $2, $3, $4, $5, now(), now())
+            """);
+        command.Parameters.AddWithValue(id);
+        command.Parameters.AddWithValue(username);
+        command.Parameters.AddWithValue(PasswordHasher.Hash(AccessDatabase.Password));
+        command.Parameters.AddWithValue(isActive);
+        command.Parameters.AddWithValue(mustChangePassword);
+        await command.ExecuteNonQueryAsync();
+        return id;
+    }
 }

@@ -64,6 +64,18 @@ public class DocumentValidatorTests
     }
 
     [Fact]
+    public void Ignores_the_author_and_the_company_sent_by_the_caller()
+    {
+        var result = Validate(
+            """{"subject":"x","created_by":"11111111-1111-4111-8111-111111111111","updated_by":7,"company_id":null}""");
+
+        Assert.True(result.IsValid);
+        Assert.DoesNotContain("created_by", result.Values.Keys);
+        Assert.DoesNotContain("updated_by", result.Values.Keys);
+        Assert.DoesNotContain("company_id", result.Values.Keys);
+    }
+
+    [Fact]
     public void Rejects_a_value_that_is_not_text()
     {
         var error = Assert.Single(Validate("""{"subject":42}""").Errors);

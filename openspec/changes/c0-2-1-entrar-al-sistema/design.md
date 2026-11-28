@@ -13,14 +13,14 @@ Restricciones heredadas:
 
 **Todas las decisiones de abajo las tomó DataDave-Dev el 2026-11-27**, respondiendo preguntas con opciones. Donde eligió algo distinto de lo recomendado se dice. Lo que nadie ha decidido está en "Open Questions", sin valor.
 
-**Verificado ejecutándolo:** que NSec.Cryptography calcula Argon2id en Linux con .NET 10 y da el mismo resultado que otras cuatro librerías (comparativa de la decisión 2). También las tareas 2.1 a 2.4, con pruebas contra PostgreSQL real: el núcleo crea sus siete tablas y el rol de administrador y un segundo arranque no cambia nada; reglas de contraseña y hash Argon2id en formato PHC; sesiones con sus dos vencimientos y el ajuste de varias sesiones; entrada con bloqueo por intentos fallidos. Lo demás de este change sigue sin construir. Del anterior sigue en pie lo que su `design.md` lista como verificado.
+**Verificado ejecutándolo:** que NSec.Cryptography calcula Argon2id en Linux con .NET 10 y da el mismo resultado que otras cuatro librerías (comparativa de la decisión 2). También las tareas 2.1 a 2.4, con pruebas contra PostgreSQL real: el núcleo crea sus siete tablas y el rol de administrador y un segundo arranque no cambia nada; reglas de contraseña y hash Argon2id en formato PHC; sesiones con sus dos vencimientos y el ajuste de varias sesiones; entrada con bloqueo por intentos fallidos. Y las tareas 3.1 a 3.4, con pruebas de integración contra el servidor real en memoria y PostgreSQL real: alta inicial con candado, código de instalación, rutas de estado, entrar, salir y cambiar la contraseña propia, y la puerta que exige `Origin`, JSON, empresa y sesión en todo `/api`. Y las tareas 4.1 a 4.5: catálogo de permisos, roles de fábrica declarados con atributos y sembrados una sola vez, resolución de permisos por cuenta y rutas de roles. Y las tareas 5.1 a 5.3, 7.1 y 7.2: la API de documentos aplica permiso y alcance en un solo punto, el motor llena autor y empresa y agrega las llaves foráneas hacia el núcleo, y TI interno trae sus dos roles de fábrica. Lo demás de este change sigue sin construir. Del anterior sigue en pie lo que su `design.md` lista como verificado.
 
 **Supuesto** (cada uno lo cierra una tarea):
 
 - Que Kestrel acepte un certificado generado en el arranque y lo sirva sin más configuración en Windows y Linux.
 - Que la publicación autocontenida empaquete sola el binario nativo de libsodium en Windows.
-- Que agregar llaves foráneas a tablas ya creadas quepa en "crear lo que falta" sin romper los registros con esas columnas vacías.
-- Que las pruebas de integración (servidor en memoria, sin Kestrel) puedan simular una petición que no viene de la propia máquina.
+- Que agregar llaves foráneas a tablas ya creadas quepa en "crear lo que falta" sin romper los registros con esas columnas vacías. **Verificado en la tarea 5.3.**
+- Que las pruebas de integración (servidor en memoria, sin Kestrel) puedan simular una petición que no viene de la propia máquina. **Verificado en la tarea 3.2:** el servidor en memoria no trae dirección de quien llama, y un filtro de arranque de las pruebas la fija; sin dirección, el servidor trata la petición como de otra máquina.
 
 ## Goals / Non-Goals
 
@@ -224,6 +224,97 @@ PATCH  /api/settings/access      cambiar ajustes de acceso
 ```
 
 - **Descartado: agruparlas bajo `/api/core`**, y **entrar, salir y alta inicial bajo `/api/auth`.**
+
+### 13. Primer arranque y rutas de sesión: lo que faltaba decidir
+
+Decidió DataDave-Dev el 2026-11-27, antes de empezar la sección 3 de tareas, respondiendo preguntas con opciones. En las ocho eligió lo recomendado.
+
+**Códigos de rechazo y estado HTTP.**
+
+| Caso | HTTP | Código |
+|---|---|---|
+| Falta el alta inicial | 409 | `setup_required` |
+| Alta inicial con empresa ya creada | 409 | `setup_done` |
+| Código de instalación equivocado o ausente | 403 | `invalid_code` |
+| Código de instalación agotado | 403 | `code_attempts_exhausted` |
+| Sin sesión, o sesión vencida | 401 | `unauthenticated` |
+| Entrada rechazada (los cuatro casos) | 401 | `invalid_credentials` |
+| Debe cambiar contraseña | 403 | `password_change_required` |
+| Puede ver pero no dar de alta | 403 | `forbidden` |
+| `Origin` ajeno o ausente | 403 | `invalid_origin` |
+| Cuerpo que no es JSON | 400 | `invalid_body` (ya existía) |
+| Datos inválidos | 422 | `validation` (ya existía), una entrada por regla rota |
+
+Códigos por campo dentro de `validation`: `password` con los de la decisión 9; `username` con `invalid_format`, `too_short`, `too_long` y `taken`; `company_name` y `name` con `required` y `too_long`; `current_password` con `wrong_password`. **Descartado: responder 403 en lugar de 409 para `setup_required` y `setup_done`.**
+
+- **La máquina del servidor** es una conexión que llega de la dirección de bucle local (`127.0.0.1` o `::1`) y cuya petición no trae `X-Forwarded-For` ni `Forwarded`. No cubre un proxy que no anuncie el reenvío. **Descartado: solo la dirección de bucle local.**
+- **Una escritura sin `Origin` se rechaza**, igual que una con `Origin` distinto del servidor. **Descartado: aceptarla cuando falta.**
+- **La galleta se llama `__Host-osme_session` y es persistente, con `Max-Age` de 7 días.** Cerrar el navegador no saca de la sesión; mandan los límites del servidor. **Descartado: galleta de sesión del navegador.**
+- **Código de instalación: solo gasta intento un código equivocado;** una petición sin código se rechaza sin contar. Agotados los cinco, la respuesta lo dice con `code_attempts_exhausted`. **Descartado: responder igual que a un código equivocado** y **que la petición sin código también cuente.**
+- **La empresa y la cuenta que crea el alta inicial llevan en `created_by` y `updated_by` a ese mismo administrador.** **Descartado: dejarlos vacíos.**
+- **Los nombres de la empresa y de la persona se recortan por los lados** antes de validar y guardar; vacíos se rechazan con `required` y el máximo se mide ya recortado. **Descartado: guardarlos tal cual.**
+
+**Forma del estado** (`GET /api/session`; entrar y el alta inicial responden la de sesión iniciada):
+
+```
+{ "state": "setup_required", "codeRequired": true }
+{ "state": "signed_out" }
+{ "state": "signed_in",
+  "account": { "id", "username", "name", "mustChangePassword" },
+  "isAdministrator": true,
+  "roles": [ { "id", "name" } ],
+  "permissions": [ { "key", "scope" } ] }
+```
+
+- Quien entró con contraseña temporal sigue en `signed_in`, con `mustChangePassword` en verdadero; solo le responden `GET /api/session`, `DELETE /api/session` y `POST /api/session/password`. **Descartado: un cuarto estado `password_change_required`.**
+- `permissions` sale vacío hasta la tarea 4.4, que es la que resuelve permisos.
+
+Cuatro más, decididas por DataDave-Dev el mismo 2026-11-27 al llegar a las rutas; también eligió lo recomendado:
+
+- **La contraseña nueva tiene que ser distinta de la actual;** si es igual se rechaza en `password` con `same_as_current`. Así una temporal nunca queda como definitiva. **Descartado: aceptarla si cumple las reglas.**
+- **Una contraseña actual equivocada al cambiar la propia cuenta como intento fallido**, en la misma cuenta de 5 fallos y 15 minutos de la decisión 9; con la cuenta en espera el cambio se rechaza con `wrong_password`. **Descartado: que no cuente.**
+- **El código de instalación se compara sin guiones ni espacios:** `K7QM-2XPD`, `k7qm2xpd` y `K7QM 2XPD` valen lo mismo. **Descartado: exigir los ocho caracteres exactos.**
+- **Al crear una cuenta, al usuario se le quitan los espacios de los lados**, igual que al entrar; un espacio en medio se rechaza con `invalid_format`. **Descartado: rechazar también los de los lados.**
+
+### 14. Roles y permisos: lo que faltaba decidir
+
+Decidió DataDave-Dev el 2026-11-27, antes de empezar la sección 4 de tareas, respondiendo preguntas con opciones. En las seis eligió lo recomendado.
+
+- **El paquete declara su nombre visible en el manifiesto:** `[assembly: Package("itdesk", "0.1.0", Label = "TI interno")]`. Sin etiqueta se muestra el nombre interno. **Descartado: mostrar siempre el nombre interno** y **que lo traduzca la interfaz.**
+- **Un atributo por rol de fábrica, con una lista de documentos por permiso**, nombrados por su nombre dentro del paquete. El origen guardado es `paquete.rol` (`itdesk.technician`). **Descartado: permisos como texto** (`"ticket.read:all"`) y **rol y concesiones en atributos separados con `typeof`.**
+
+  ```csharp
+  [assembly: FactoryRole("technician", "Técnico de sistemas", ReadAll = ["ticket"], Create = ["ticket"])]
+  [assembly: FactoryRole("requester", "Solicitante", ReadOwn = ["ticket"], Create = ["ticket"])]
+  ```
+
+- **Si el nombre de un rol de fábrica ya está tomado, se crea con el paquete entre paréntesis** (`Solicitante (itdesk)`) y queda en el registro. **Descartado: no crearlo y avisar** y **no cargar el paquete.**
+- **Toda declaración de roles mal hecha impide cargar el paquete**, no solo el documento ajeno o inexistente: también dos roles con el mismo nombre en el paquete y un rol que da de alta sin ver. El registro nombra paquete, rol y motivo. **Descartado: cargar el paquete sin ese rol.**
+- **Sin la vista (Usuarios, Roles o Ajustes de acceso), sus rutas responden 403 `forbidden`**, sin ningún dato. **Descartado: 404 `not_found`, como los documentos.**
+
+**Forma del catálogo y de los roles.**
+
+```
+GET /api/permissions
+{ "core": ["core.users", "core.roles", "core.access_settings"],
+  "packages": [ { "name": "itdesk", "label": "TI interno",
+    "documents": [ { "key": "itdesk.ticket", "label": "Ticket",
+        "read": "itdesk.ticket.read", "create": "itdesk.ticket.create" } ] } ] }
+
+GET /api/roles
+[ { "id", "name", "isActive", "isSystem", "origin",
+    "permissions": [ { "key": "itdesk.ticket.read", "scope": "all" } ] } ]
+
+POST  /api/roles       { "name", "permissions": [ { "key", "scope" } ] }
+PATCH /api/roles/{id}  { "name"?, "permissions"?, "is_active"? }
+```
+
+- El alcance es `all` u `own` en los permisos de ver; siempre `all` en los demás.
+- El administrador sale con todo el catálogo, en la lista de roles y en `permissions` del estado de sesión.
+- `permissions` en un cambio reemplaza el conjunto completo; lo que no viene en el cambio no se toca. Los permisos de paquetes no cargados no se muestran y se conservan al guardar.
+- El nombre del rol se recorta por los lados, como los demás nombres.
+- Rechazos por campo (422 `validation`): `name` con `required`, `too_long` y `taken`; `permissions` con `unknown_permission`, `create_without_read` e `invalid_scope`. El rechazo trae en `values` las claves o los documentos que lo causan.
+- Cambiar el rol de administrador: 409 `system_role`. Rol que no existe: 404 `not_found`.
 
 ## Risks / Trade-offs
 

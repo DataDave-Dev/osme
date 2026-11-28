@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 using Osme.Core.Contracts;
 
-[assembly: Package("itdesk", "0.1.0")]
+[assembly: Package("itdesk", "0.1.0", Label = "TI interno")]
+
+// Factory roles: created the first time the module loads, and from then on edited like any other.
+[assembly: FactoryRole("technician", "Técnico de sistemas", ReadAll = ["ticket"], Create = ["ticket"])]
+[assembly: FactoryRole("requester", "Solicitante", ReadOwn = ["ticket"], Create = ["ticket"])]
 
 namespace Osme.Modules.ItDesk;
 

@@ -58,25 +58,37 @@ public sealed class SignIn(NpgsqlDataSource dataSource, Sessions sessions, TimeP
                 return null;
             }
 
-            var isRight = PasswordHasher.Verify(password, hash);
-
-            // Once a wait is over the count starts from zero.
-            var failures = isRight ? 0 : (lockedUntil is null ? failedAttempts : 0) + 1;
-            var locks = failures >= MaxFailedAttempts;
-
-            await using (var update = new NpgsqlCommand(
-                "UPDATE core.user_account SET failed_attempts = $2, locked_until = $3 WHERE id = $1", connection, transaction))
-            {
-                update.Parameters.AddWithValue(id);
-                update.Parameters.AddWithValue(locks ? 0 : failures);
-                update.Parameters.AddWithValue(locks ? now + LockTime : DBNull.Value);
-                await update.ExecuteNonQueryAsync(cancel);
-            }
+            var isRight = await VerifyCountingAsync(
+                connection, transaction, id, hash, failedAttempts, lockedUntil, password, now, cancel);
             await transaction.CommitAsync(cancel);
 
             if (!isRight) return null;
         }
 
         return new SignInResult(await sessions.CreateAsync(id, cancel), id, mustChangePassword);
+    }
+
+    /// <summary>
+    /// Checks a password against an account that is not waiting and keeps its count of failures:
+    /// the fifth in a row starts the wait, a right one starts the count again. The caller holds
+    /// the row locked and commits.
+    /// </summary>
+    internal static async Task<bool> VerifyCountingAsync(
+        NpgsqlConnection connection, NpgsqlTransaction transaction, Guid id, string hash,
+        int failedAttempts, DateTimeOffset? lockedUntil, string password, DateTimeOffset now, CancellationToken cancel)
+    {
+        var isRight = PasswordHasher.Verify(password, hash);
+
+        // Once a wait is over the count starts from zero.
+        var failures = isRight ? 0 : (lockedUntil is null ? failedAttempts : 0) + 1;
+        var locks = failures >= MaxFailedAttempts;
+
+        await using var update = new NpgsqlCommand(
+            "UPDATE core.user_account SET failed_attempts = $2, locked_until = $3 WHERE id = $1", connection, transaction);
+        update.Parameters.AddWithValue(id);
+        update.Parameters.AddWithValue(locks ? 0 : failures);
+        update.Parameters.AddWithValue(locks ? now + LockTime : DBNull.Value);
+        await update.ExecuteNonQueryAsync(cancel);
+        return isRight;
     }
 }

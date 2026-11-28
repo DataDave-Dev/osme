@@ -20,8 +20,20 @@
   <Folder Name="/tests/TestPackages/Beta/">
     <Project Path="tests/TestPackages/Beta/Osme.TestPackages.Beta.csproj" />
   </Folder>
+  <Folder Name="/tests/TestPackages/BlindRole/">
+    <Project Path="tests/TestPackages/BlindRole/Osme.TestPackages.BlindRole.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/ForeignRole/">
+    <Project Path="tests/TestPackages/ForeignRole/Osme.TestPackages.ForeignRole.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/Gamma/">
+    <Project Path="tests/TestPackages/Gamma/Osme.TestPackages.Gamma.csproj" />
+  </Folder>
   <Folder Name="/tests/TestPackages/Orphan/">
     <Project Path="tests/TestPackages/Orphan/Osme.TestPackages.Orphan.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestPackages/TwinRoles/">
+    <Project Path="tests/TestPackages/TwinRoles/Osme.TestPackages.TwinRoles.csproj" />
   </Folder>
   <Folder Name="/tests/TestPackages/Violator/">
     <Project Path="tests/TestPackages/Violator/Osme.TestPackages.Violator.csproj" />

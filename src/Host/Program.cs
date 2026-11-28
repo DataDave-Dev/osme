@@ -10,10 +10,11 @@ using Osme.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// There is no sign-in yet, so the server only answers its own machine (change c0-2-1 lifts this).
+// Still only its own machine: the server opens to the network when it serves HTTPS (task 8.2 of change 0-2-1).
 var port = builder.Configuration.GetValue("Osme:Port", 5080);
 builder.WebHost.ConfigureKestrel(kestrel => kestrel.ListenLocalhost(port));
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.ConfigureHttpJsonOptions(json =>
     json.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)));
 
@@ -37,6 +38,29 @@ var store = new DocumentStore(dataSource);
 foreach (var document in documents.Values)
     await store.EnsureStructureAsync(document);
 
+var clock = app.Services.GetRequiredService<TimeProvider>();
+var sessions = new Sessions(dataSource, clock);
+var setup = new InitialSetup(dataSource, clock);
+
+// Without a company, every start makes a new installation code and writes it where whoever
+// runs the server can read it: it is what another machine must present to do the initial setup.
+InstallationCode? installationCode = null;
+if (!await setup.IsDoneAsync())
+{
+    installationCode = new InstallationCode();
+    app.Logger.LogWarning(
+        "This installation has no company yet. Installation code for the initial setup from another machine: {InstallationCode}",
+        installationCode.Display);
+}
+
+// What can be granted comes from the loaded packages; their factory roles are created once.
+var catalog = new PermissionCatalog(packages);
+var roles = new Roles(dataSource, catalog, clock);
+await roles.SeedAsync(packages.SelectMany(p => p.FactoryRoles), app.Logger);
+
+var access = new AccessApi(
+    setup, sessions, new SignIn(dataSource, sessions, clock), new Accounts(dataSource, sessions, catalog, clock), installationCode);
+
 app.UseExceptionHandler(errors => errors.Run(async context =>
 {
     var failure = context.Features.Get<IExceptionHandlerFeature>()?.Error;
@@ -47,54 +71,15 @@ app.UseExceptionHandler(errors => errors.Run(async context =>
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+access.UseGate(app);
+access.MapRoutes(app);
+new RolesApi(roles, catalog).MapRoutes(app);
+
+// Needs a session and nothing else: it says what is installed, not what it holds.
 app.MapGet("/api/packages", () =>
     Api.Ok(packages.Select(p => new { p.Manifest.Name, p.Manifest.Version })));
 
-// The interface does not know any document: this is how it learns which ones to offer.
-app.MapGet("/api/meta", () =>
-    Api.Ok(documents.Values.Select(d => new { d.Key, d.Label })));
-
-app.MapGet("/api/meta/{key}", (string key) =>
-    documents.TryGetValue(key, out var document) ? Api.Ok(document) : Api.NotFound());
-
-app.MapGet("/api/docs/{key}", async (string key, CancellationToken cancel) =>
-    documents.TryGetValue(key, out var document)
-        ? Api.Ok(await store.ListAsync(document, cancel))
-        : Api.NotFound());
-
-app.MapGet("/api/docs/{key}/{id}", async (string key, string id, CancellationToken cancel) =>
-    documents.TryGetValue(key, out var document)
-    && Guid.TryParse(id, out var guid)
-    && await store.GetAsync(document, guid, cancel) is { } record
-        ? Api.Ok(record)
-        : Api.NotFound());
-
-app.MapPost("/api/docs/{key}", async (string key, HttpRequest request, CancellationToken cancel) =>
-{
-    if (!documents.TryGetValue(key, out var document)) return Api.NotFound();
-
-    JsonDocument body;
-    try
-    {
-        body = await JsonDocument.ParseAsync(request.Body, cancellationToken: cancel);
-    }
-    catch (JsonException)
-    {
-        return Api.Fail(StatusCodes.Status400BadRequest, "invalid_body");
-    }
-
-    using (body)
-    {
-        if (body.RootElement.ValueKind != JsonValueKind.Object)
-            return Api.Fail(StatusCodes.Status400BadRequest, "invalid_body");
-
-        var result = DocumentValidator.Validate(document, body.RootElement);
-        if (!result.IsValid)
-            return Api.Fail(StatusCodes.Status422UnprocessableEntity, "validation", result.Errors);
-
-        return Api.Ok(await store.InsertAsync(document, result.Values, cancel), StatusCodes.Status201Created);
-    }
-});
+new DocumentsApi(documents, store, setup).MapRoutes(app);
 
 // Unknown /api routes answer in the same shape as everything else.
 app.Map("/api/{**rest}", () => Api.NotFound());

@@ -4,7 +4,9 @@ using System.Text.Json;
 namespace Osme.Core.Documents;
 
 /// <summary>Why a field was rejected. Codes, not sentences: the interface words them.</summary>
-public sealed record FieldError(string Field, string Code, int? MaxLength = null, IReadOnlyList<string>? Options = null);
+/// <param name="Values">What the rejection is about when a field alone does not say it: the permissions or documents refused.</param>
+public sealed record FieldError(
+    string Field, string Code, int? MaxLength = null, IReadOnlyList<string>? Options = null, IReadOnlyList<string>? Values = null);
 
 public sealed record ValidationResult(IReadOnlyDictionary<string, string?> Values, IReadOnlyList<FieldError> Errors)
 {
@@ -19,6 +21,9 @@ public static class DocumentValidator
     public const string UnknownField = "unknown_field";
     public const string InvalidType = "invalid_type";
 
+    // The identifier, and who creates the record and for which company, which come from the session.
+    private static readonly HashSet<string> ServerAssigned = [DocumentModelBuilder.Id, "company_id", "created_by", "updated_by"];
+
     /// <summary>Checks a JSON object against the description and returns the values to store.</summary>
     public static ValidationResult Validate(DocumentDescription document, JsonElement body)
     {
@@ -32,7 +37,7 @@ public static class DocumentValidator
         foreach (var property in body.EnumerateObject())
         {
             // The server assigns these; whatever the caller sends for them is ignored.
-            if (property.Name == DocumentModelBuilder.Id || document.Fields.Any(f => f.ReadOnly && f.Name == property.Name))
+            if (ServerAssigned.Contains(property.Name) || document.Fields.Any(f => f.ReadOnly && f.Name == property.Name))
                 continue;
 
             if (!writable.ContainsKey(property.Name))
